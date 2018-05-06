@@ -155,8 +155,7 @@
         [ 'OS=="win"', {
           'sources': [
             'runner-win.c',
-            'runner-win.h',
-            '../src/win/snprintf.c',
+            'runner-win.h'
           ],
           'libraries': [ '-lws2_32' ]
         }, { # POSIX
@@ -245,8 +244,7 @@
         [ 'OS=="win"', {
           'sources': [
             'runner-win.c',
-            'runner-win.h',
-            '../src/win/snprintf.c',
+            'runner-win.h'
           ],
           'libraries': [ '-lws2_32' ]
         }, { # POSIX

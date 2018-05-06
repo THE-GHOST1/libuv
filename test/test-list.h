@@ -56,6 +56,9 @@ TEST_DECLARE   (tty_file)
 TEST_DECLARE   (tty_pty)
 TEST_DECLARE   (stdio_over_pipes)
 TEST_DECLARE   (ip6_pton)
+#ifndef _WIN32
+TEST_DECLARE   (ip6_invalid_interface)
+#endif
 TEST_DECLARE   (connect_unspecified)
 TEST_DECLARE   (ipc_listen_before_write)
 TEST_DECLARE   (ipc_listen_after_write)
@@ -145,10 +148,16 @@ TEST_DECLARE   (udp_try_send)
 TEST_DECLARE   (pipe_bind_error_addrinuse)
 TEST_DECLARE   (pipe_bind_error_addrnotavail)
 TEST_DECLARE   (pipe_bind_error_inval)
+#ifndef _WIN32
+TEST_DECLARE   (pipe_bind_error_long_path)
+#endif
 TEST_DECLARE   (pipe_connect_multiple)
 TEST_DECLARE   (pipe_listen_without_bind)
 TEST_DECLARE   (pipe_connect_bad_name)
 TEST_DECLARE   (pipe_connect_to_file)
+#ifndef _WIN32
+TEST_DECLARE   (pipe_connect_to_long_path)
+#endif
 TEST_DECLARE   (pipe_connect_on_prepare)
 TEST_DECLARE   (pipe_getsockname)
 TEST_DECLARE   (pipe_getsockname_abstract)
@@ -256,6 +265,8 @@ TEST_DECLARE   (spawn_and_ping)
 TEST_DECLARE   (spawn_preserve_env)
 TEST_DECLARE   (spawn_setuid_fails)
 TEST_DECLARE   (spawn_setgid_fails)
+TEST_DECLARE   (spawn_affinity)
+TEST_DECLARE   (spawn_affinity_invalid_mask)
 TEST_DECLARE   (spawn_stdout_to_file)
 TEST_DECLARE   (spawn_stdout_and_stderr_to_file)
 TEST_DECLARE   (spawn_stdout_and_stderr_to_file2)
@@ -330,7 +341,9 @@ TEST_DECLARE   (fs_open_dir)
 TEST_DECLARE   (fs_rename_to_existing_file)
 TEST_DECLARE   (fs_write_multiple_bufs)
 TEST_DECLARE   (fs_read_write_null_arguments)
-TEST_DECLARE   (get_osfhandle_valid_handle)
+#ifdef _WIN32
+TEST_DECLARE   (fs_invalid_filename)
+#endif
 TEST_DECLARE   (fs_write_alotof_bufs)
 TEST_DECLARE   (fs_write_alotof_bufs_with_offset)
 TEST_DECLARE   (fs_file_pos_after_op_with_offset)
@@ -460,6 +473,9 @@ TASK_LIST_START
 
   TEST_ENTRY  (pipe_connect_bad_name)
   TEST_ENTRY  (pipe_connect_to_file)
+#ifndef _WIN32
+  TEST_ENTRY  (pipe_connect_to_long_path)
+#endif
   TEST_ENTRY  (pipe_connect_on_prepare)
 
   TEST_ENTRY  (pipe_server_close)
@@ -478,6 +494,9 @@ TASK_LIST_START
   TEST_ENTRY  (tty_pty)
   TEST_ENTRY  (stdio_over_pipes)
   TEST_ENTRY  (ip6_pton)
+#ifndef _WIN32
+  TEST_ENTRY  (ip6_invalid_interface)
+#endif
   TEST_ENTRY  (connect_unspecified)
   TEST_ENTRY  (ipc_listen_before_write)
   TEST_ENTRY  (ipc_listen_after_write)
@@ -599,6 +618,9 @@ TASK_LIST_START
   TEST_ENTRY  (pipe_bind_error_addrinuse)
   TEST_ENTRY  (pipe_bind_error_addrnotavail)
   TEST_ENTRY  (pipe_bind_error_inval)
+#ifndef _WIN32
+  TEST_ENTRY  (pipe_bind_error_long_path)
+#endif
   TEST_ENTRY  (pipe_connect_multiple)
   TEST_ENTRY  (pipe_listen_without_bind)
   TEST_ENTRY  (pipe_getsockname)
@@ -757,6 +779,8 @@ TASK_LIST_START
   TEST_ENTRY  (spawn_preserve_env)
   TEST_ENTRY  (spawn_setuid_fails)
   TEST_ENTRY  (spawn_setgid_fails)
+  TEST_ENTRY  (spawn_affinity)
+  TEST_ENTRY  (spawn_affinity_invalid_mask)
   TEST_ENTRY  (spawn_stdout_to_file)
   TEST_ENTRY  (spawn_stdout_and_stderr_to_file)
   TEST_ENTRY  (spawn_stdout_and_stderr_to_file2)
@@ -865,12 +889,14 @@ TASK_LIST_START
   TEST_ENTRY  (fs_write_alotof_bufs)
   TEST_ENTRY  (fs_write_alotof_bufs_with_offset)
   TEST_ENTRY  (fs_read_write_null_arguments)
+#ifdef _WIN32
+  TEST_ENTRY  (fs_invalid_filename)
+#endif
   TEST_ENTRY  (fs_file_pos_after_op_with_offset)
   TEST_ENTRY  (fs_null_req)
 #ifdef _WIN32
   TEST_ENTRY  (fs_exclusive_sharing_mode)
 #endif
-  TEST_ENTRY  (get_osfhandle_valid_handle)
   TEST_ENTRY  (threadpool_queue_work_simple)
   TEST_ENTRY  (threadpool_queue_work_einval)
   TEST_ENTRY  (threadpool_multiple_event_loops)

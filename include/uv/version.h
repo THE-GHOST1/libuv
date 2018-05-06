@@ -19,39 +19,31 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UV_WIN_ATOMICOPS_INL_H_
-#define UV_WIN_ATOMICOPS_INL_H_
+#ifndef UV_VERSION_H
+#define UV_VERSION_H
 
-#include "uv.h"
-#include "internal.h"
+ /*
+ * Versions with the same major number are ABI stable. API is allowed to
+ * evolve between minor releases, but only in a backwards compatible way.
+ * Make sure you update the -soname directives in configure.ac
+ * and uv.gyp whenever you bump UV_VERSION_MAJOR or UV_VERSION_MINOR (but
+ * not UV_VERSION_PATCH.)
+ */
 
+<<<<<<< HEAD:include/uv-version.h
+#define UV_VERSION_MAJOR 1
+#define UV_VERSION_MINOR 19
+#define UV_VERSION_PATCH 3
+=======
+#define UV_VERSION_MAJOR 2
+#define UV_VERSION_MINOR 0
+#define UV_VERSION_PATCH 0
+>>>>>>> 8eed38fd4a65dab97240055cfb27d580ca5cbdce:include/uv/version.h
+#define UV_VERSION_IS_RELEASE 0
+#define UV_VERSION_SUFFIX "dev"
 
-/* Atomic set operation on char */
-#ifdef _MSC_VER /* MSVC */
+#define UV_VERSION_HEX  ((UV_VERSION_MAJOR << 16) | \
+                         (UV_VERSION_MINOR <<  8) | \
+                         (UV_VERSION_PATCH))
 
-/* _InterlockedOr8 is supported by MSVC on x32 and x64. It is  slightly less */
-/* efficient than InterlockedExchange, but InterlockedExchange8 does not */
-/* exist, and interlocked operations on larger targets might require the */
-/* target to be aligned. */
-#pragma intrinsic(_InterlockedOr8)
-
-static char INLINE uv__atomic_exchange_set(char volatile* target) {
-  return _InterlockedOr8(target, 1);
-}
-
-#else /* GCC */
-
-/* Mingw-32 version, hopefully this works for 64-bit gcc as well. */
-static inline char uv__atomic_exchange_set(char volatile* target) {
-  const char one = 1;
-  char old_value;
-  __asm__ __volatile__ ("lock xchgb %0, %1\n\t"
-                        : "=r"(old_value), "=m"(*target)
-                        : "0"(one), "m"(*target)
-                        : "memory");
-  return old_value;
-}
-
-#endif
-
-#endif /* UV_WIN_ATOMICOPS_INL_H_ */
+#endif /* UV_VERSION_H */

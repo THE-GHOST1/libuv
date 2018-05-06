@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <TargetConditionals.h>
 
@@ -49,7 +50,7 @@ static int uv__pthread_setname_np(const char* name) {
   strncpy(namebuf, name, sizeof(namebuf) - 1);
   namebuf[sizeof(namebuf) - 1] = '\0';
 
-  err = dynamic_pthread_setname_np(namebuf);
+  err = pthread_setname_np(namebuf);
   if (err)
     return UV__ERR(err);
 

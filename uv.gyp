@@ -64,15 +64,17 @@
       'sources': [
         'common.gypi',
         'include/uv.h',
-        'include/tree.h',
-        'include/uv-errno.h',
-        'include/uv-threadpool.h',
-        'include/uv-version.h',
+        'include/uv/tree.h',
+        'include/uv/errno.h',
+        'include/uv/threadpool.h',
+        'include/uv/version.h',
         'src/fs-poll.c',
         'src/heap-inl.h',
         'src/inet.c',
+        'src/loop-watcher.c',
         'src/queue.h',
         'src/threadpool.c',
+        'src/timer.c',
         'src/uv-data-getter-setters.c',
         'src/uv-common.c',
         'src/uv-common.h',
@@ -95,9 +97,8 @@
             '_GNU_SOURCE',
           ],
           'sources': [
-            'include/uv-win.h',
+            'include/uv/win.h',
             'src/win/async.c',
-            'src/win/atomicops-inl.h',
             'src/win/core.c',
             'src/win/detect-wakeup.c',
             'src/win/dl.c',
@@ -109,7 +110,6 @@
             'src/win/handle.c',
             'src/win/handle-inl.h',
             'src/win/internal.h',
-            'src/win/loop-watcher.c',
             'src/win/pipe.c',
             'src/win/thread.c',
             'src/win/poll.c',
@@ -118,12 +118,10 @@
             'src/win/req.c',
             'src/win/req-inl.h',
             'src/win/signal.c',
-            'src/win/snprintf.c',
             'src/win/stream.c',
             'src/win/stream-inl.h',
             'src/win/tcp.c',
             'src/win/tty.c',
-            'src/win/timer.c',
             'src/win/udp.c',
             'src/win/util.c',
             'src/win/winapi.c',
@@ -137,6 +135,7 @@
               '-liphlpapi',
               '-lpsapi',
               '-lshell32',
+              '-lsecur32',
               '-luser32',
               '-luserenv',
               '-lws2_32'
@@ -144,12 +143,12 @@
           },
         }, { # Not Windows i.e. POSIX
           'sources': [
-            'include/uv-unix.h',
-            'include/uv-linux.h',
-            'include/uv-sunos.h',
-            'include/uv-darwin.h',
-            'include/uv-bsd.h',
-            'include/uv-aix.h',
+            'include/uv/unix.h',
+            'include/uv/linux.h',
+            'include/uv/sunos.h',
+            'include/uv/darwin.h',
+            'include/uv/bsd.h',
+            'include/uv/aix.h',
             'src/unix/async.c',
             'src/unix/atomic-ops.h',
             'src/unix/core.c',
@@ -159,7 +158,6 @@
             'src/unix/getnameinfo.c',
             'src/unix/internal.h',
             'src/unix/loop.c',
-            'src/unix/loop-watcher.c',
             'src/unix/pipe.c',
             'src/unix/poll.c',
             'src/unix/process.c',
@@ -168,7 +166,6 @@
             'src/unix/stream.c',
             'src/unix/tcp.c',
             'src/unix/thread.c',
-            'src/unix/timer.c',
             'src/unix/tty.c',
             'src/unix/udp.c',
           ],
@@ -199,8 +196,8 @@
             ['uv_library=="shared_library" and OS!="mac" and OS!="zos"', {
               # This will cause gyp to set soname
               # Must correspond with UV_VERSION_MAJOR
-              # in include/uv-version.h
-              'product_extension': 'so.1',
+              # in include/uv/version.h
+              'product_extension': 'so.2',
             }],
           ],
         }],
@@ -211,7 +208,7 @@
           'cflags': [
             '-fvisibility=hidden',
             '-g',
-            '--std=gnu89',
+            '--std=gnu99',
             '-pedantic',
             '-Wall',
             '-Wextra',
@@ -268,7 +265,7 @@
           ],
           'defines': [
             '__EXTENSIONS__',
-            '_XOPEN_SOURCE=500',
+            '_XOPEN_SOURCE=600',
           ],
           'link_settings': {
             'libraries': [

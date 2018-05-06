@@ -19,7 +19,7 @@
  */
 
 #include "uv.h"
-#include "internal.h"
+#include "uv-common.h"
 #include "heap-inl.h"
 
 #include <assert.h>
@@ -107,10 +107,8 @@ int uv_timer_again(uv_timer_t* handle) {
   if (handle->timer_cb == NULL)
     return UV_EINVAL;
 
-  if (handle->repeat) {
-    uv_timer_stop(handle);
+  if (handle->repeat)
     uv_timer_start(handle, handle->timer_cb, handle->repeat, handle->repeat);
-  }
 
   return 0;
 }

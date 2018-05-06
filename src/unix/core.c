@@ -40,6 +40,7 @@
 #include <sys/uio.h> /* writev */
 #include <sys/resource.h> /* getrusage */
 #include <pwd.h>
+#include <sched.h>
 
 #ifdef __sun
 # include <netdb.h> /* MAXHOSTNAMELEN on Solaris */
@@ -63,8 +64,10 @@
 # include <sys/sysctl.h>
 # include <sys/filio.h>
 # include <sys/wait.h>
+# include <sys/param.h>
+# include <sys/cpuset.h>
 # define UV__O_CLOEXEC O_CLOEXEC
-# if defined(__FreeBSD__) && __FreeBSD__ >= 10
+# if defined(__FreeBSD__)
 #  define uv__accept4 accept4
 # endif
 # if defined(__NetBSD__)
@@ -73,9 +76,6 @@
 # if (defined(__FreeBSD__) && __FreeBSD__ >= 10) || defined(__NetBSD__)
 #  define UV__SOCK_NONBLOCK SOCK_NONBLOCK
 #  define UV__SOCK_CLOEXEC  SOCK_CLOEXEC
-# endif
-# if !defined(F_DUP2FD_CLOEXEC) && defined(_F_DUP2FD_CLOEXEC)
-#  define F_DUP2FD_CLOEXEC  _F_DUP2FD_CLOEXEC
 # endif
 #endif
 
@@ -308,7 +308,7 @@ int uv_is_closing(const uv_handle_t* handle) {
 }
 
 
-int uv_backend_fd(const uv_loop_t* loop) {
+uv_os_fd_t uv_backend_fd(const uv_loop_t* loop) {
   return loop->backend_fd;
 }
 
@@ -1142,6 +1142,7 @@ int uv__getpwuid_r(uv_passwd_t* pwd) {
   size_t name_size;
   size_t homedir_size;
   size_t shell_size;
+  size_t gecos_size;
   long initsize;
   int r;
 #if defined(__ANDROID_API__) && __ANDROID_API__ < 21
@@ -1190,11 +1191,24 @@ int uv__getpwuid_r(uv_passwd_t* pwd) {
     return UV_ENOENT;
   }
 
-  /* Allocate memory for the username, shell, and home directory */
+  /* Allocate memory for the username, gecos, shell, and home directory. */
   name_size = strlen(pw.pw_name) + 1;
   homedir_size = strlen(pw.pw_dir) + 1;
   shell_size = strlen(pw.pw_shell) + 1;
-  pwd->username = uv__malloc(name_size + homedir_size + shell_size);
+
+#ifdef __MVS__
+  gecos_size = 0; /* pw_gecos does not exist on zOS. */
+#else
+  if (pw.pw_gecos != NULL)
+    gecos_size = strlen(pw.pw_gecos) + 1;
+  else
+    gecos_size = 0;
+#endif
+
+  pwd->username = uv__malloc(name_size +
+                             homedir_size +
+                             shell_size +
+                             gecos_size);
 
   if (pwd->username == NULL) {
     uv__free(buf);
@@ -1212,6 +1226,18 @@ int uv__getpwuid_r(uv_passwd_t* pwd) {
   pwd->shell = pwd->homedir + homedir_size;
   memcpy(pwd->shell, pw.pw_shell, shell_size);
 
+  /* Copy the gecos field */
+#ifdef __MVS__
+  pwd->gecos = NULL;  /* pw_gecos does not exist on zOS. */
+#else
+  if (pw.pw_gecos == NULL) {
+    pwd->gecos = NULL;
+  } else {
+    pwd->gecos = pwd->shell + shell_size;
+    memcpy(pwd->gecos, pw.pw_gecos, gecos_size);
+  }
+#endif
+
   /* Copy the uid and gid */
   pwd->uid = pw.pw_uid;
   pwd->gid = pw.pw_gid;
@@ -1227,7 +1253,7 @@ void uv_os_free_passwd(uv_passwd_t* pwd) {
     return;
 
   /*
-    The memory for name, shell, and homedir are allocated in a single
+    The memory for name, shell, homedir, and gecos are allocated in a single
     uv__malloc() call. The base of the pointer is stored in pwd->username, so
     that is the field that needs to be freed.
   */
@@ -1235,6 +1261,7 @@ void uv_os_free_passwd(uv_passwd_t* pwd) {
   pwd->username = NULL;
   pwd->shell = NULL;
   pwd->homedir = NULL;
+  pwd->gecos = NULL;
 }
 
 
@@ -1326,12 +1353,6 @@ int uv_os_gethostname(char* buffer, size_t* size) {
   return 0;
 }
 
-
-uv_os_fd_t uv_get_osfhandle(int fd) {
-  return fd;
-}
-
-
 uv_pid_t uv_os_getpid(void) {
   return getpid();
 }
@@ -1339,4 +1360,12 @@ uv_pid_t uv_os_getpid(void) {
 
 uv_pid_t uv_os_getppid(void) {
   return getppid();
+}
+
+int uv_cpumask_size(void) {
+#if defined(__linux__) || defined(__FreeBSD__)
+  return CPU_SETSIZE;
+#else
+  return UV_ENOTSUP;
+#endif
 }
